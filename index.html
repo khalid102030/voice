@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>المساعد الصوتي الذكي</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0d0d0d;
+      --paper: #f5f0e8;
+      --cream: #ede8dc;
+      --gold: #c9a84c;
+      --gold-light: #e8c96a;
+      --gold-dark: #9c7a2e;
+      --rust: #b54a2a;
+      --sage: #4a7c6f;
+      --sage-light: #6a9e90;
+      --border: #d4c9b0;
+      --shadow: rgba(13,13,13,0.12);
+      --card-bg: #faf7f0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--paper);
+      font-family: 'Tajawal', sans-serif;
+      color: var(--ink);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Textured background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        radial-gradient(circle at 20% 20%, rgba(201,168,76,0.06) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(74,124,111,0.06) 0%, transparent 50%),
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 48px 24px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--ink);
+      color: var(--gold);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      padding: 6px 16px;
+      border-radius: 2px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+
+    .header-badge svg { width: 12px; height: 12px; fill: currentColor; }
+
+    h1 {
+      font-size: clamp(28px, 5vw, 42px);
+      font-weight: 800;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+
+    h1 span {
+      color: var(--gold-dark);
+      position: relative;
+    }
+
+    h1 span::after {
+      content: '';
+      position: absolute;
+      bottom: -2px;
+      left: 0; right: 0;
+      height: 3px;
+      background: var(--gold);
+      border-radius: 2px;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.6;
+    }
+
+    /* Decorative line */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin: 32px 0;
+      color: var(--border);
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .divider-icon { font-size: 18px; }
+
+    /* Card */
+    .card {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      box-shadow: 0 4px 24px var(--shadow), 0 1px 0 rgba(255,255,255,0.8) inset;
+      margin-bottom: 24px;
+      transition: box-shadow 0.3s ease;
+    }
+
+    .card:hover { box-shadow: 0 8px 40px var(--shadow); }
+
+    .card-title {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      margin-bottom: 24px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Upload Zone */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 48px 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      background: white;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--gold);
+      background: #fdf9f0;
+      transform: translateY(-2px);
+    }
+
+    .upload-icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 20px;
+      background: var(--cream);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid var(--border);
+    }
+
+    .upload-icon svg { width: 28px; height: 28px; stroke: var(--gold-dark); }
+
+    .upload-text-main {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .upload-text-sub {
+      font-size: 13px;
+      color: #888;
+    }
+
+    #file-input { display: none; }
+
+    /* Separator */
+    .or-separator {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      color: #aaa;
+      font-size: 13px;
+    }
+    .or-separator::before, .or-separator::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* Record button */
+    .record-btn {
+      width: 100%;
+      padding: 16px;
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      border-radius: 8px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transition: all 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .record-btn:hover { background: #1a1a1a; transform: translateY(-1px); }
+
+    .record-btn.recording {
+      background: var(--rust);
+      animation: pulse-btn 1.5s infinite;
+    }
+
+    @keyframes pulse-btn {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(181,74,42,0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(181,74,42,0); }
+    }
+
+    .rec-dot {
+      width: 10px; height: 10px;
+      background: currentColor;
+      border-radius: 50%;
+    }
+
+    .record-btn.recording .rec-dot {
+      animation: blink 1s infinite;
+    }
+
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+    /* Timer */
+    .record-timer {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 13px;
+      color: rgba(255,255,255,0.8);
+    }
+
+    /* Audio preview */
+    .audio-preview {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--cream);
+      border-radius: 8px;
+      border: 1px solid var(--border);
+    }
+
+    .audio-preview.visible { display: block; }
+    .audio-preview-label {
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    audio { width: 100%; height: 36px; }
+
+    /* Analyze button */
+    .analyze-btn {
+      width: 100%;
+      padding: 18px;
+      background: var(--gold-dark);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+      margin-top: 20px;
+      letter-spacing: 0.02em;
+    }
+
+    .analyze-btn.visible { display: flex; }
+    .analyze-btn:hover { background: #7a5f22; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(156,122,46,0.3); }
+    .analyze-btn svg { width: 20px; height: 20px; stroke: currentColor; }
+
+    /* Loading */
+    .loading-state {
+      display: none;
+      text-align: center;
+      padding: 48px 24px;
+    }
+
+    .loading-state.visible { display: block; }
+
+    .loading-spinner {
+      width: 56px;
+      height: 56px;
+      margin: 0 auto 24px;
+      position: relative;
+    }
+
+    .loading-spinner::before, .loading-spinner::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      border: 3px solid transparent;
+    }
+
+    .loading-spinner::before {
+      border-top-color: var(--gold);
+      animation: spin 1s linear infinite;
+    }
+
+    .loading-spinner::after {
+      border-bottom-color: var(--sage);
+      animation: spin 1.5s linear infinite reverse;
+      inset: 8px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .loading-text {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--ink);
+      margin-bottom: 8px;
+    }
+
+    .loading-sub {
+      font-size: 13px;
+      color: #888;
+    }
+
+    .loading-steps {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .step-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--border);
+      animation: stepFade 1.5s infinite;
+    }
+
+    .step-dot:nth-child(2) { animation-delay: 0.3s; }
+    .step-dot:nth-child(3) { animation-delay: 0.6s; }
+
+    @keyframes stepFade {
+      0%, 100% { background: var(--border); transform: scale(1); }
+      50% { background: var(--gold); transform: scale(1.4); }
+    }
+
+    /* Result Form */
+    .result-section {
+      display: none;
+      animation: fadeSlideUp 0.5s ease forwards;
+    }
+
+    .result-section.visible { display: block; }
+
+    @keyframes fadeSlideUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .field-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      color: var(--gold-dark);
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .input-wrapper {
+      position: relative;
+    }
+
+    .input-wrapper svg {
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      stroke: #bbb;
+      pointer-events: none;
+    }
+
+    input[type="text"], input[type="number"], input[type="tel"] {
+      width: 100%;
+      padding: 14px 44px 14px 16px;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 15px;
+      color: var(--ink);
+      background: white;
+      transition: all 0.2s ease;
+      outline: none;
+      direction: rtl;
+    }
+
+    input[type="text"]:focus, input[type="number"]:focus, input[type="tel"]:focus {
+      border-color: var(--gold);
+      box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+    }
+
+    .input-hint {
+      font-size: 11px;
+      color: #aaa;
+      margin-top: 5px;
+    }
+
+    .fields-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    /* AI indicator */
+    .ai-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(74,124,111,0.1);
+      border: 1px solid rgba(74,124,111,0.3);
+      color: var(--sage);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-bottom: 20px;
+    }
+
+    .ai-dot {
+      width: 6px; height: 6px;
+      background: var(--sage);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Confirm button */
+    .confirm-btn {
+      width: 100%;
+      padding: 20px;
+      background: var(--sage);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      transition: all 0.25s ease;
+      margin-top: 32px;
+      letter-spacing: 0.02em;
+    }
+
+    .confirm-btn:hover { background: #3a6a5e; transform: translateY(-2px); box-shadow: 0 8px 24px rgba(74,124,111,0.3); }
+    .confirm-btn svg { width: 22px; height: 22px; stroke: currentColor; }
+
+    /* Reset button */
+    .reset-btn {
+      width: 100%;
+      padding: 12px;
+      background: transparent;
+      color: #888;
+      border: 1.5px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Tajawal', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 12px;
+    }
+
+    .reset-btn:hover { border-color: #aaa; color: var(--ink); background: var(--cream); }
+
+    /* Success Toast */
+    .toast {
+      position: fixed;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%) translateY(120px);
+      background: var(--ink);
+      color: white;
+      padding: 16px 28px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+      transition: transform 0.4s cubic-bezier(0.34,1.56,0.64,1);
+      z-index: 1000;
+    }
+
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    .toast-icon {
+      width: 28px; height: 28px;
+      background: var(--sage);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .toast-icon svg { width: 16px; height: 16px; stroke: white; }
+
+    /* Error state */
+    .error-box {
+      display: none;
+      padding: 16px 20px;
+      background: #fef2f0;
+      border: 1.5px solid #f0c0b8;
+      border-radius: 8px;
+      color: var(--rust);
+      font-size: 14px;
+      margin-top: 16px;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .error-box.visible { display: flex; }
+
+    /* Footer */
+    .footer {
+      text-align: center;
+      margin-top: 40px;
+      font-size: 12px;
+      color: #bbb;
+    }
+
+    @media (max-width: 480px) {
+      .card { padding: 24px 20px; }
+      .fields-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header>
+      <div class="header-badge">
+        <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        ذكاء اصطناعي · Gemini 2.5 Flash
+      </div>
+      <h1>المساعد الصوتي <span>الذكي</span></h1>
+      <p class="subtitle">ارفع ملفاً صوتياً أو سجّل مباشرة، وسيستخرج الذكاء الاصطناعي<br/>بيانات العميل تلقائياً بدقة عالية</p>
+    </header>
+
+    <!-- Upload Card -->
+    <div class="card" id="upload-card">
+      <div class="card-title">
+        <span>١</span>
+        <span>رفع أو تسجيل الصوت</span>
+      </div>
+
+      <!-- File Upload Zone -->
+      <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input').click()">
+        <div class="upload-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0020 4.77A5.07 5.07 0 0019.91 1S18.73.65 16 2.48a13.38 13.38 0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 005 4.77a5.44 5.44 0 00-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 009 18.13V22"/>
+          </svg>
+        </div>
+        <div class="upload-text-main">اضغط لاختيار ملف صوتي</div>
+        <div class="upload-text-sub">MP3, WAV, M4A, OGG — حتى 25MB</div>
+      </div>
+      <input type="file" id="file-input" accept="audio/*" />
+
+      <div class="or-separator"><span>أو سجّل الآن</span></div>
+
+      <!-- Record Button -->
+      <button class="record-btn" id="record-btn" onclick="toggleRecording()">
+        <span class="rec-dot"></span>
+        <span id="record-label">تسجيل صوتي مباشر</span>
+        <span class="record-timer" id="timer" style="display:none;">00:00</span>
+      </button>
+
+      <!-- Audio Preview -->
+      <div class="audio-preview" id="audio-preview">
+        <div class="audio-preview-label">المقطع الصوتي الجاهز للتحليل:</div>
+        <audio controls id="audio-player"></audio>
+      </div>
+
+      <!-- Error Box -->
+      <div class="error-box" id="error-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20" style="flex-shrink:0;margin-top:1px">
+          <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+        </svg>
+        <span id="error-text"></span>
+      </div>
+
+      <!-- Analyze Button -->
+      <button class="analyze-btn" id="analyze-btn" onclick="analyzeAudio()">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/>
+          <path d="M11 8v6M8 11h6"/>
+        </svg>
+        بدء التحليل الذكي
+      </button>
+    </div>
+
+    <!-- Loading State -->
+    <div class="card loading-state" id="loading-state">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">يجري التحليل الصوتي...</div>
+      <div class="loading-sub">Gemini يستمع ويستخرج البيانات بدقة</div>
+      <div class="loading-steps">
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+        <div class="step-dot"></div>
+      </div>
+    </div>
+
+    <!-- Result Section -->
+    <div class="result-section" id="result-section">
+      <div class="card">
+        <div class="card-title">
+          <span>٢</span>
+          <span>مراجعة وتأكيد البيانات</span>
+        </div>
+
+        <div class="ai-badge">
+          <div class="ai-dot"></div>
+          تم استخراجه بواسطة الذكاء الاصطناعي — يمكنك التعديل
+        </div>
+
+        <div class="field-group">
+          <label>اسم العميل</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>
+            </svg>
+            <input type="text" id="f-name" placeholder="أدخل اسم العميل" />
+          </div>
+        </div>
+
+        <div class="fields-grid">
+          <div class="field-group">
+            <label>رقم الجوال</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/>
+              </svg>
+              <input type="tel" id="f-phone" placeholder="05XXXXXXXX" />
+            </div>
+            <div class="input-hint">10 أرقام يبدأ بـ 05</div>
+          </div>
+          <div class="field-group">
+            <label>الحي</label>
+            <div class="input-wrapper">
+              <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <input type="text" id="f-district" placeholder="اسم الحي" />
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <label>قيمة الفاتورة (ريال)</label>
+          <div class="input-wrapper">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/>
+            </svg>
+            <input type="number" id="f-invoice" placeholder="0.00" step="0.01" />
+          </div>
+        </div>
+
+        <button class="confirm-btn" onclick="confirmData()">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+          </svg>
+          تأكيد وصحة المعلومات
+        </button>
+
+        <button class="reset-btn" onclick="resetAll()">↩ تحليل تسجيل آخر</button>
+      </div>
+    </div>
+
+    <div class="footer">مدعوم بـ Gemini 2.5 Flash · معالجة صوتية بالذكاء الاصطناعي</div>
+  </div>
+
+  <!-- Success Toast -->
+  <div class="toast" id="toast">
+    <div class="toast-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <span>✅ تم تأكيد البيانات بنجاح!</span>
+  </div>
+
+  <script>
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let timerInterval = null;
+    let seconds = 0;
+    let audioBlob = null;
+    let audioFile = null;
+
+    // ======== File Upload ========
+    const fileInput = document.getElementById('file-input');
+    const uploadZone = document.getElementById('upload-zone');
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) setAudioFile(file);
+    });
+
+    uploadZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadZone.classList.add('drag-over');
+    });
+    uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('drag-over'));
+    uploadZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadZone.classList.remove('drag-over');
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('audio/')) setAudioFile(file);
+    });
+
+    function setAudioFile(file) {
+      audioFile = file;
+      audioBlob = null;
+      const url = URL.createObjectURL(file);
+      document.getElementById('audio-player').src = url;
+      document.getElementById('audio-preview').classList.add('visible');
+      document.getElementById('analyze-btn').classList.add('visible');
+      hideError();
+    }
+
+    // ======== Recording ========
+    async function toggleRecording() {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        stopRecording();
+      } else {
+        startRecording();
+      }
+    }
+
+    async function startRecording() {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        audioChunks = [];
+        mediaRecorder = new MediaRecorder(stream);
+
+        mediaRecorder.ondataavailable = (e) => audioChunks.push(e.data);
+        mediaRecorder.onstop = () => {
+          audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+          audioFile = null;
+          const url = URL.createObjectURL(audioBlob);
+          document.getElementById('audio-player').src = url;
+          document.getElementById('audio-preview').classList.add('visible');
+          document.getElementById('analyze-btn').classList.add('visible');
+          stream.getTracks().forEach(t => t.stop());
+        };
+
+        mediaRecorder.start();
+        seconds = 0;
+        document.getElementById('timer').style.display = 'inline';
+        timerInterval = setInterval(() => {
+          seconds++;
+          const m = String(Math.floor(seconds/60)).padStart(2,'0');
+          const s = String(seconds%60).padStart(2,'0');
+          document.getElementById('timer').textContent = `${m}:${s}`;
+        }, 1000);
+
+        const btn = document.getElementById('record-btn');
+        btn.classList.add('recording');
+        document.getElementById('record-label').textContent = 'اضغط لإيقاف التسجيل';
+        document.getElementById('audio-preview').classList.remove('visible');
+        document.getElementById('analyze-btn').classList.remove('visible');
+        hideError();
+
+      } catch (err) {
+        showError('لا يمكن الوصول إلى الميكروفون. يرجى السماح بالإذن من إعدادات المتصفح.');
+      }
+    }
+
+    function stopRecording() {
+      clearInterval(timerInterval);
+      mediaRecorder.stop();
+      const btn = document.getElementById('record-btn');
+      btn.classList.remove('recording');
+      document.getElementById('record-label').textContent = 'تسجيل صوتي مباشر';
+      document.getElementById('timer').style.display = 'none';
+    }
+
+    // ======== Analysis ========
+    async function analyzeAudio() {
+      const formData = new FormData();
+
+      if (audioFile) {
+        formData.append('file', audioFile);
+      } else if (audioBlob) {
+        formData.append('file', audioBlob, 'recording.webm');
+      } else {
+        showError('لا يوجد ملف صوتي للتحليل.');
+        return;
+      }
+
+      // Show loading
+      document.getElementById('upload-card').style.display = 'none';
+      document.getElementById('loading-state').classList.add('visible');
+      document.getElementById('result-section').classList.remove('visible');
+      hideError();
+
+      try {
+        const response = await fetch('/analyze-audio', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.detail || 'حدث خطأ في الخادم');
+        }
+
+        // Fill form
+        document.getElementById('f-name').value = data.customer_name || '';
+        document.getElementById('f-phone').value = data.phone_number || '';
+        document.getElementById('f-district').value = data.district || '';
+        document.getElementById('f-invoice').value = data.invoice_value || '';
+
+        // Show result
+        document.getElementById('loading-state').classList.remove('visible');
+        document.getElementById('result-section').classList.add('visible');
+
+      } catch (err) {
+        document.getElementById('loading-state').classList.remove('visible');
+        document.getElementById('upload-card').style.display = 'block';
+        showError('خطأ في التحليل: ' + err.message);
+      }
+    }
+
+    // ======== Confirm ========
+    function confirmData() {
+      const name = document.getElementById('f-name').value.trim();
+      const phone = document.getElementById('f-phone').value.trim();
+      const district = document.getElementById('f-district').value.trim();
+      const invoice = document.getElementById('f-invoice').value;
+
+      if (!name || !phone || !district || !invoice) {
+        alert('يرجى ملء جميع الحقول قبل التأكيد');
+        return;
+      }
+
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 3500);
+    }
+
+    // ======== Reset ========
+    function resetAll() {
+      audioBlob = null;
+      audioFile = null;
+      document.getElementById('file-input').value = '';
+      document.getElementById('audio-preview').classList.remove('visible');
+      document.getElementById('analyze-btn').classList.remove('visible');
+      document.getElementById('audio-player').src = '';
+      document.getElementById('result-section').classList.remove('visible');
+      document.getElementById('upload-card').style.display = 'block';
+      hideError();
+    }
+
+    function showError(msg) {
+      const box = document.getElementById('error-box');
+      document.getElementById('error-text').textContent = msg;
+      box.classList.add('visible');
+    }
+
+    function hideError() {
+      document.getElementById('error-box').classList.remove('visible');
+    }
+  </script>
+</body>
+</html>
